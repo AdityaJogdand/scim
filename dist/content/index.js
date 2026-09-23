@@ -55,8 +55,10 @@ function getProperties(el) {
 }
 var SKIP_TAGS = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "NOSCRIPT", "SVG", "PATH", "META", "LINK", "HEAD"]);
 var LEAF_TAGS = /* @__PURE__ */ new Set(["INPUT", "IMG", "SELECT", "TEXTAREA", "BUTTON", "A", "H1", "H2", "H3", "H4", "H5", "H6"]);
+var elementMap = /* @__PURE__ */ new Map();
 function harvestDOM() {
   const nodes = [];
+  elementMap.clear();
   let id = 0;
   function walk(el) {
     if (SKIP_TAGS.has(el.tagName)) return;
@@ -66,8 +68,10 @@ function harvestDOM() {
     const hasText = text.length > 0;
     if (isLeaf || hasText) {
       const rect = el.getBoundingClientRect();
+      const nodeId = `node_${id++}`;
+      elementMap.set(nodeId, el);
       nodes.push({
-        id: `node_${id++}`,
+        id: nodeId,
         type: getNodeType(el),
         text,
         bbox: { x: Math.round(rect.x), y: Math.round(rect.y), width: Math.round(rect.width), height: Math.round(rect.height) },
@@ -91,24 +95,12 @@ function harvestDOM() {
 }
 
 // src/content/executor.ts
-function findElement(ssg, nodeId) {
-  const node = ssg.nodes.find((n) => n.id === nodeId);
-  if (!node) return null;
-  const x = node.bbox.x + node.bbox.width / 2;
-  const y = node.bbox.y + node.bbox.height / 2;
-  return document.elementFromPoint(x, y);
-}
-var lastSSG = null;
-function setLastSSG(ssg) {
-  lastSSG = ssg;
-}
 function executeAction(plan) {
-  if (!lastSSG) return { success: false, error: "No SSG available" };
   if (plan.action.type === "done") return { success: true };
   if (plan.action.type === "wait") return { success: true };
   const target = plan.action.target;
   if (!target) return { success: false, error: "No target specified" };
-  const el = findElement(lastSSG, target);
+  const el = elementMap.get(target);
   if (!el) return { success: false, error: `Element not found for ${target}` };
   switch (plan.action.type) {
     case "click":
@@ -140,7 +132,6 @@ function executeAction(plan) {
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.type === "harvest") {
     const ssg = harvestDOM();
-    setLastSSG(ssg);
     sendResponse({ type: "harvest_result", ssg });
   } else if (msg.type === "execute") {
     const result = executeAction(msg.plan);

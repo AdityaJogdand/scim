@@ -2,24 +2,26 @@
 var taskInput = document.getElementById("task");
 var runButton = document.getElementById("run");
 var statusDiv = document.getElementById("status");
-function setStatus(text) {
+var connLabel = document.getElementById("conn-label");
+function setStatus(text, label = "Ready") {
   statusDiv.textContent = text;
+  connLabel.textContent = label;
 }
 runButton.addEventListener("click", async () => {
   const task = taskInput.value.trim();
   if (!task) return;
   runButton.disabled = true;
-  setStatus("Harvesting page...");
+  setStatus("Harvesting page...", "Running");
   try {
     const response = await chrome.runtime.sendMessage({ type: "run_task", task });
     if (response.success) {
-      setStatus(`Done: ${response.plan.action.type} \u2192 ${response.plan.action.target || "n/a"}
-${response.plan.reasoning}`);
+      setStatus(`${response.plan.action.type} \u2192 ${response.plan.action.target || "done"}
+${response.plan.reasoning}`, "Done");
     } else {
-      setStatus(`Error: ${response.error}`);
+      setStatus(response.error, "Failed");
     }
   } catch (e) {
-    setStatus(`Error: ${e.message}`);
+    setStatus(e.message, "Error");
   } finally {
     runButton.disabled = false;
   }

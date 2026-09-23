@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "esbuild src/content/index.ts src/background/index.ts src/popup/index.ts --bundle --outdir=dist --format=esm --target=chrome120",
+    "build": "esbuild src/content/index.ts --bundle --outfile=dist/content/index.js --format=iife --target=chrome120 && esbuild src/background/index.ts src/popup/index.ts --bundle --outdir=dist --format=esm --target=chrome120",
     "watch": "npm run build -- --watch",
     "typecheck": "tsc --noEmit"
   },

@@ -1,9 +1,11 @@
 const taskInput = document.getElementById("task") as HTMLInputElement;
 const runButton = document.getElementById("run") as HTMLButtonElement;
 const statusDiv = document.getElementById("status") as HTMLDivElement;
+const connLabel = document.getElementById("conn-label") as HTMLSpanElement;
 
-function setStatus(text: string) {
+function setStatus(text: string, label = "Ready") {
   statusDiv.textContent = text;
+  connLabel.textContent = label;
 }
 
 runButton.addEventListener("click", async () => {
@@ -11,17 +13,17 @@ runButton.addEventListener("click", async () => {
   if (!task) return;
 
   runButton.disabled = true;
-  setStatus("Harvesting page...");
+  setStatus("Harvesting page...", "Running");
 
   try {
     const response = await chrome.runtime.sendMessage({ type: "run_task", task });
     if (response.success) {
-      setStatus(`Done: ${response.plan.action.type} → ${response.plan.action.target || "n/a"}\n${response.plan.reasoning}`);
+      setStatus(`${response.plan.action.type} → ${response.plan.action.target || "done"}\n${response.plan.reasoning}`, "Done");
     } else {
-      setStatus(`Error: ${response.error}`);
+      setStatus(response.error, "Failed");
     }
   } catch (e: any) {
-    setStatus(`Error: ${e.message}`);
+    setStatus(e.message, "Error");
   } finally {
     runButton.disabled = false;
   }

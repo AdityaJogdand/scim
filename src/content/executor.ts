@@ -1,30 +1,14 @@
-import type { ActionPlan, SSG } from "../lib/types";
-
-function findElement(ssg: SSG, nodeId: string): Element | null {
-  const node = ssg.nodes.find(n => n.id === nodeId);
-  if (!node) return null;
-
-  // Find element at the center of the bounding box
-  const x = node.bbox.x + node.bbox.width / 2;
-  const y = node.bbox.y + node.bbox.height / 2;
-  return document.elementFromPoint(x, y);
-}
-
-let lastSSG: SSG | null = null;
-
-export function setLastSSG(ssg: SSG) {
-  lastSSG = ssg;
-}
+import type { ActionPlan } from "../lib/types";
+import { elementMap } from "./harvester";
 
 export function executeAction(plan: ActionPlan): { success: boolean; error?: string } {
-  if (!lastSSG) return { success: false, error: "No SSG available" };
   if (plan.action.type === "done") return { success: true };
   if (plan.action.type === "wait") return { success: true };
 
   const target = plan.action.target;
   if (!target) return { success: false, error: "No target specified" };
 
-  const el = findElement(lastSSG, target);
+  const el = elementMap.get(target);
   if (!el) return { success: false, error: `Element not found for ${target}` };
 
   switch (plan.action.type) {

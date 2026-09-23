@@ -34,7 +34,6 @@ function getTextContent(el: Element): string {
   if (el.tagName === "IMG") {
     return (el as HTMLImageElement).alt || "";
   }
-  // Direct text only (not children's text)
   let text = "";
   for (const child of el.childNodes) {
     if (child.nodeType === Node.TEXT_NODE) {
@@ -57,8 +56,12 @@ function getProperties(el: Element): Record<string, string> {
 const SKIP_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "SVG", "PATH", "META", "LINK", "HEAD"]);
 const LEAF_TAGS = new Set(["INPUT", "IMG", "SELECT", "TEXTAREA", "BUTTON", "A", "H1", "H2", "H3", "H4", "H5", "H6"]);
 
+// Store node ID → DOM element for direct access during execution
+export const elementMap = new Map<string, Element>();
+
 export function harvestDOM(): SSG {
   const nodes: SSGNode[] = [];
+  elementMap.clear();
   let id = 0;
 
   function walk(el: Element) {
@@ -71,8 +74,10 @@ export function harvestDOM(): SSG {
 
     if (isLeaf || hasText) {
       const rect = el.getBoundingClientRect();
+      const nodeId = `node_${id++}`;
+      elementMap.set(nodeId, el);
       nodes.push({
-        id: `node_${id++}`,
+        id: nodeId,
         type: getNodeType(el),
         text,
         bbox: { x: Math.round(rect.x), y: Math.round(rect.y), width: Math.round(rect.width), height: Math.round(rect.height) },
@@ -81,7 +86,6 @@ export function harvestDOM(): SSG {
       });
     }
 
-    // Walk children (skip if this is a leaf with text already captured)
     if (!LEAF_TAGS.has(el.tagName)) {
       for (const child of el.children) {
         walk(child);
