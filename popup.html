@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { width: 320px; padding: 16px; font-family: system-ui, sans-serif; font-size: 14px; }
+    h1 { font-size: 18px; margin: 0 0 12px; }
+    #task { width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+    #run { margin-top: 8px; padding: 8px 16px; background: #2563eb; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; width: 100%; }
+    #run:disabled { background: #94a3b8; cursor: not-allowed; }
+    #status { margin-top: 12px; padding: 8px; background: #f1f5f9; border-radius: 4px; font-size: 13px; min-height: 20px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Scrim</h1>
+  <input id="task" type="text" placeholder="What should I do on this page?">
+  <button id="run">Go</button>
+  <div id="status">Ready</div>
+  <script type="module" src="dist/popup/index.js"></script>
+</body>
+</html>
